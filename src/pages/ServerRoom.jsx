@@ -1,22 +1,29 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 
 export default function ServerRoom() {
-  const servers = [
-    { name: 'Server A', apps: ['app1', 'app2'] },
-    { name: 'Server B', apps: ['service-x', 'service-y'] },
+  // Mock apps (in future this will come from backend/CLI)
+  const apps = [
+    { id: "app1", name: "Frontend App" },
+    { id: "app2", name: "Backend API" }
   ]
+
   return (
     <div>
       <h2 className="text-2xl font-semibold mb-4">Server Room</h2>
       <div className="space-y-4">
-        {servers.map(s => (
-          <div key={s.name} className="bg-white rounded shadow p-4">
-            <h3 className="font-semibold">{s.name}</h3>
-            <div className="mt-2 flex gap-3">
-              {s.apps.map(a => (
-                <div key={a} className="p-2 border rounded">{a}</div>
-              ))}
+        {apps.map(app => (
+          <div key={app.id} className="bg-white rounded shadow p-4 flex justify-between items-center">
+            <div>
+              <h3 className="font-semibold">{app.name}</h3>
+              <p className="text-sm text-gray-500">ID: {app.id}</p>
             </div>
+            <Link
+              to={`/app/${app.id}`}
+              className="px-3 py-1 bg-indigo-600 text-white rounded"
+            >
+              View
+            </Link>
           </div>
         ))}
       </div>

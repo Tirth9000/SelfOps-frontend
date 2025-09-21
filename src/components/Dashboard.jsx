@@ -11,7 +11,7 @@ import {
   Legend,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
-import { motion } from "framer-motion"; // Add animations
+import { motion } from "framer-motion";
 
 ChartJS.register(
   CategoryScale,
@@ -37,7 +37,7 @@ const Dashboard = () => {
             : metric === "memory"
             ? [20, 22, 25, 28, 30, 32]
             : [50, 60, 55, 70, 65, 80],
-        borderColor: "#3b82f6",
+        borderColor: "#1f2937", // Dark gray consistent with theme
         fill: false,
         tension: 0.3,
       },
@@ -49,7 +49,7 @@ const Dashboard = () => {
             : metric === "memory"
             ? [0, 0, 0, 0, 0, 0]
             : [10, 12, 10, 15, 20, 22],
-        borderColor: "#f59e0b",
+        borderColor: "#4b5563", // Slightly lighter gray
         fill: false,
         tension: 0.3,
       },
@@ -108,12 +108,12 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen p-6 bg-gray-100">
-      <h1 className="text-3xl font-bold mb-6">📊 SelfOps - Container Dashboard</h1>
+    <div className="min-h-screen p-6 bg-gray-50">
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">📊 SelfOps - Container Dashboard</h1>
 
       {/* Top Graph */}
       <motion.div
-        className="bg-white p-6 rounded-xl shadow mb-8 w-full"
+        className="bg-white p-6 rounded-2xl shadow mb-8 w-full"
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
@@ -122,16 +122,18 @@ const Dashboard = () => {
           {["cpu", "memory", "network"].map((m) => (
             <button
               key={m}
-              className={`px-4 py-2 rounded font-medium ${
-                metric === m ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"
-              }`}
+              className={`px-4 py-2 rounded-xl font-medium text-sm ${
+                metric === m
+                  ? "bg-gray-800 text-white"
+                  : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+              } transition`}
               onClick={() => setMetric(m)}
             >
               {m.toUpperCase()}
             </button>
           ))}
         </div>
-        <div style={{ height: "700px" }}>
+        <div style={{ height: "500px" }}>
           <Line data={chartData} options={chartOptions} />
         </div>
       </motion.div>
@@ -141,7 +143,7 @@ const Dashboard = () => {
         {cards.map((c, idx) => (
           <motion.div
             key={idx}
-            className="bg-white rounded-xl p-6 shadow hover:shadow-lg transition"
+            className="bg-white rounded-2xl p-6 shadow hover:shadow-lg transition"
             whileHover={{ scale: 1.03 }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -149,7 +151,7 @@ const Dashboard = () => {
           >
             <div className="flex justify-between items-center mb-4">
               <div>
-                <h3 className="font-semibold text-lg">{c.name}</h3>
+                <h3 className="font-semibold text-lg text-gray-800">{c.name}</h3>
                 <p className="text-gray-500 text-sm">ID: {c.id}</p>
               </div>
               <div className="flex gap-2">

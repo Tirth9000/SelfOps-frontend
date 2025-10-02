@@ -1,21 +1,35 @@
 // src/components/Login.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";  // Import axios for API calls
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (email && password) {
-      // Store a dummy token to simulate login
-      localStorage.setItem("token", "selfops_dummy_token");
+      try {
+        const response = await axios.post("http://127.0.0.1:8000/cli/login", {
+          email: email,  // Adjust if backend uses 'email' instead of 'username'
+          password: password,
+        });
 
-      // Redirect to HomeDashboard
-      navigate("/dashboard");
+        if (response.status === 200) {
+          // Store the token from backend
+          localStorage.setItem("token", response.data.access_token);
+
+          // Redirect to HomeDashboard
+          navigate("/dashboard");
+        } else {
+          alert(response.data.message || "Login failed");
+        }
+      } catch (error) {
+        alert(error.response?.data?.detail || "An error occurred during login");
+      }
     } else {
       alert("Please enter email and password");
     }

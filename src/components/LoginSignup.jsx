@@ -1,30 +1,63 @@
 // src/components/LoginSignup.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";  // Import axios for API calls
 
 const LoginSignup = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Simulated login/signup logic
     if (isLogin) {
-      // Replace this with real authentication
       if (email && password) {
-        // Redirect to dashboard
-        navigate("/dashboard");
+        try {
+          const response = await axios.post("http://127.0.0.1:8000/login", {
+            email: email,  // Adjust if backend uses 'email' instead of 'username'
+            password: password,
+          });
+
+          if (response.status === 200) {
+            localStorage.setItem("token", response.data.access_token);
+            navigate("/dashboard");
+          } else {
+            alert(response.data.message || "Login failed");
+          }
+        } catch (error) {
+          alert(error.response?.data?.detail || "An error occurred during login");
+        }
       } else {
         alert("Please enter email and password");
       }
     } else {
-      // Sign Up logic
-      if (email && password) {
-        alert("Account created! Please login.");
-        setIsLogin(true);
+      if (username && email && password && confirmPassword) {
+        if (password !== confirmPassword) {
+          alert("Passwords do not match");
+          return;
+        }
+        try {
+          const response = await axios.post("http://127.0.0.1:8000/register", {
+            username: username,
+            email: email,
+            password: password,
+          });
+
+          if (response.status === 201) {
+            alert("Account created! Please login.");
+            setIsLogin(true);
+          } else {
+            alert(response.data.message || "Signup failed");
+          }
+        } catch (error) {
+          alert(error.response?.data?.detail || "An error occurred during signup");
+        }
+      } else {
+        alert("Please fill all fields");
       }
     }
   };
@@ -55,6 +88,8 @@ const LoginSignup = () => {
               <input
                 type="text"
                 placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 className="w-full px-5 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-500 transition duration-300 transform hover:scale-105"
                 required
               />
@@ -75,6 +110,16 @@ const LoginSignup = () => {
               className="w-full px-5 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-500 transition duration-300 transform hover:scale-105"
               required
             />
+            {!isLogin && (
+              <input
+                type="password"
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-5 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-500 transition duration-300 transform hover:scale-105"
+                required
+              />
+            )}
 
             <button
               type="submit"

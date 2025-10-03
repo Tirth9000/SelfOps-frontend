@@ -17,7 +17,7 @@ const LoginSignup = () => {
     if (isLogin) {
       if (email && password) {
         try {
-          const response = await axios.post("http://127.0.0.1:8000/login", {
+          const response = await axios.post("http://127.0.0.1:8000/web/login", {
             email: email,  // Adjust if backend uses 'email' instead of 'username'
             password: password,
           });
@@ -41,7 +41,7 @@ const LoginSignup = () => {
           return;
         }
         try {
-          const response = await axios.post("http://127.0.0.1:8000/register", {
+          const response = await axios.post("http://127.0.0.1:8000/web/register", {
             username: username,
             email: email,
             password: password,

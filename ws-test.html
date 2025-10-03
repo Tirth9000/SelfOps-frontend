@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>WebSocket Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f9fafb;
+    }
+    h1 {
+      color: #1f2937;
+    }
+    pre {
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      max-height: 400px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>WebSocket Container Data</h1>
+  <pre id="output">Connecting...</pre>
+
+
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script>
+    const output = document.getElementById("output");
+    const socket = new io("http://localhost:8000", {path: "/ws"});
+
+    socket.on("connect", () => {
+      socket.emit("join", {username: "user2", room: "room1"});
+      output.textContent = "✅ Connected to WebSocket!";
+      console.log("WebSocket connected");
+    })
+
+    socket.on("live_message", (data) => {
+      const container_data = JSON.parse(data);
+      output.textContent = data
+      console.log("Received:", data);
+    })
+
+  </script>
+</body>
+</html>

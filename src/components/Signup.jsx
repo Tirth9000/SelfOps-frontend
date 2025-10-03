@@ -1,7 +1,6 @@
 // src/components/Signup.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";  // Import axios for API calls
 
 const Signup = () => {
   const [username, setUsername] = useState("");
@@ -10,7 +9,7 @@ const Signup = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
 
     if (!username || !email || !password || !confirmPassword) {
@@ -23,22 +22,9 @@ const Signup = () => {
       return;
     }
 
-    try {
-      const response = await axios.post("http://127.0.0.1:8000/register", {
-        username: username,
-        email: email,
-        password: password,
-      });
-
-      if (response.status === 201) {
-        alert("Account created! Please login.");
-        navigate("/login");
-      } else {
-        alert(response.data.message || "Signup failed");
-      }
-    } catch (error) {
-      alert(error.response?.data?.detail || "An error occurred during signup");
-    }
+    // Later: Replace alert with API call
+    alert("Account created! Please login.");
+    navigate("/login");
   };
 
   return (

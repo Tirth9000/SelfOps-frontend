@@ -1,24 +1,48 @@
 // src/components/Login.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
 
-    if (email && password) {
-      // Store a dummy token to simulate login
-      localStorage.setItem("token", "selfops_dummy_token");
+    // if (email && password) {
+    //   // Store a dummy token to simulate login
+    //   localStorage.setItem("token", "selfops_dummy_token");
 
-      // Redirect to HomeDashboard
-      navigate("/dashboard");
-    } else {
-      alert("Please enter email and password");
-    }
+    //   // Redirect to HomeDashboard
+    //   navigate("/dashboard");
+    // } else {
+    //   alert("Please enter email and password");
+    // }
+
+    if (email && password) {
+        try {
+          console.log("Submitting login for:", email);
+          const response = await axios.post("http://localhost:8000/web/login", {
+            email: email,  // Adjust if backend uses 'email' instead of 'username'
+            password: password,
+          });
+          console.log(response);
+
+          if (response.status === 200) {
+            localStorage.setItem("token", response.data.access_token);
+            navigate("/homedashboard");
+          } else {
+            alert(response.data.message || "Login failed");
+          }
+        } catch (error) {
+          console.error("Login error:", error);
+          alert(error.response?.data?.detail || "An error occurred during login");
+        }
+      } else {
+        alert("Please enter email and password");
+      }
   };
 
   return (

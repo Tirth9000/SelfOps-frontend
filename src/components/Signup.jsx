@@ -1,6 +1,7 @@
 // src/components/Signup.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const Signup = () => {
   const [username, setUsername] = useState("");
@@ -9,22 +10,48 @@ const Signup = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
 
-    if (!username || !email || !password || !confirmPassword) {
-      alert("Please fill all fields");
-      return;
-    }
+    // if (!username || !email || !password || !confirmPassword) {
+    //   alert("Please fill all fields");
+    //   return;
+    // }
 
-    if (password !== confirmPassword) {
-      alert("Passwords do not match!");
-      return;
-    }
+    // if (password !== confirmPassword) {
+    //   alert("Passwords do not match!");
+    //   return;
+    // }
 
-    // Later: Replace alert with API call
-    alert("Account created! Please login.");
-    navigate("/login");
+    if (username && email && password && confirmPassword) {
+        if (password !== confirmPassword) {
+          alert("Passwords do not match");
+          return;
+        }
+        try {
+          const response = await axios.post("http://localhost:8000/web/register", {
+            username: username,
+            email: email,
+            password: password,
+            confirm_password: confirmPassword
+          });
+
+          if (response.status === 201) {
+            alert("Account created! Please login.");
+            setIsLogin(true);
+            navigate("/login");
+          } else {
+            alert(response.data.message || "Signup failed");
+          }
+        } catch (error) {
+          alert(error.response?.data?.detail || "An error occurred during signup");
+        }
+      } else {
+        alert("Please fill all fields");
+      }
+
+    // alert("Account created! Please login.");
+    // navigate("/login");
   };
 
   return (

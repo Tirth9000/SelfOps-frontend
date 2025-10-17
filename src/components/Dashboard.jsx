@@ -26,8 +26,9 @@ ChartJS.register(
 
 const Dashboard = () => {
   const [metric, setMetric] = useState("cpu");
-  const [history, setHistory] = useState({}); 
+  const [history, setHistory] = useState({});
   const [selectedCard, setSelectedCard] = useState(null);
+  const [sharePopup, setSharePopup] = useState(false);
   const [cards, setCards] = useState([
     {
       name: "nginx-app",
@@ -76,40 +77,35 @@ const Dashboard = () => {
 
   // WebSocket connection
   useEffect(() => {
-    const ws = new io("http://localhost:8000", {path: "/ws"});
+    const ws = new io("http://localhost:8000", { path: "/ws" });
 
     ws.on("connect", () => {
-      ws.emit("join", {username: "user2", room: "room1"});
+      ws.emit("join", { username: "user2", room: "room1" });
       console.log("WebSocket connected");
     });
 
     ws.on("live_message", (data) => {
-      // data is array of container stats
       setHistory((prev) => {
         const updated = { ...prev };
-        console.log("Received data:", data);
-
         data.forEach((container) => {
           if (!updated[container.name]) {
             updated[container.name] = { cpu: [], memory: [], network: [] };
           }
 
-          // CPU is number, Memory extract numeric value (MB)
           updated[container.name].cpu = [
             ...(updated[container.name].cpu || []),
             container.cpu,
-          ].slice(-10); // keep last 6 
+          ].slice(-10);
 
-          const memUsed = parseFloat(container.memory); // extract "235MB"
+          const memUsed = parseFloat(container.memory);
           updated[container.name].memory = [
             ...(updated[container.name].memory || []),
             memUsed,
           ].slice(-10);
 
-          // network placeholder (you can replace with real)
           updated[container.name].network = [
             ...(updated[container.name].network || []),
-            Math.random() * 100, // fake network value
+            Math.random() * 100,
           ].slice(-10);
         });
 
@@ -125,7 +121,7 @@ const Dashboard = () => {
   const chartData = {
     labels,
     datasets: Object.keys(history).map((name, idx) => {
-      const colors = ["#60a5fa", "#34d399", "#fbbf24", "#f87171", "#a78bfa"]; // few colors
+      const colors = ["#60a5fa", "#34d399", "#fbbf24", "#f87171", "#a78bfa"];
       return {
         label: name,
         data: history[name][metric] || [],
@@ -144,34 +140,32 @@ const Dashboard = () => {
       y: {
         beginAtZero: true,
         ticks: {
-          callback: function(value) {
-            return value.toFixed(2); // show 0.12 as 0.12, not 0
-          }
+          callback: function (value) {
+            return value.toFixed(2);
+          },
         },
-        suggestedMax: 0.5  // zoom into small values (adjust this dynamically)
-      }
+        suggestedMax: 0.5,
+      },
     },
   };
 
-  // const maxValue = Math.max(...Object.keys(history).map((name, idx) => {
-  //   return Math.max(...(history[name][metric] || [0]));
-  // }));
-  // const chartOptions = {
-  //   responsive: true,
-  //   plugins: { legend: { position: "top" } },
-  //   scales: {
-  //     y: {
-  //       beginAtZero: true,
-  //       suggestedMax: maxValue * 1.2, // keep 20% headroom
-  //     }
-  //   },
-  // };
-
   return (
-    <div className="min-h-screen p-6 bg-gray-50">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">
-        📊 SelfOps - Container Dashboard
-      </h1>
+    <div className="min-h-screen bg-gray-50">
+      {/* Fake Navbar like Applications page */}
+      <div className="bg-white shadow-md sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto flex justify-between items-center py-6 px-6">
+          <h1 className="text-2xl font-extrabold text-gray-800">
+            📊 SelfOps - Container Dashboard
+          </h1>
+          <button
+            onClick={() => setSharePopup(true)}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition shadow"
+          >
+            Share App
+          </button>
+        </div>
+        <div className="border-b border-gray-200"></div>
+      </div>
 
       {/* Top Graph */}
       <motion.div
@@ -199,8 +193,8 @@ const Dashboard = () => {
         </div>
       </motion.div>
 
-      {/* Container Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Container Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-6">
         {cards.map((c, idx) => (
           <motion.div
             key={idx}
@@ -244,52 +238,106 @@ const Dashboard = () => {
         ))}
       </div>
 
-      {/* Popup Modal */}
+      {/* Container Popup */}
       {selectedCard && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <motion.div
-            className="bg-white rounded-2xl p-8 w-96 shadow-2xl"
+            className="bg-white rounded-2xl p-8 w-full max-w-6xl h-[90vh] overflow-y-auto shadow-2xl"
             initial={{ scale: 0.7, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.7, opacity: 0 }}
             transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
           >
-            <h2 className="text-xl font-bold mb-4">{selectedCard.name}</h2>
-            <div className="text-gray-700 space-y-2 text-sm">
-              <p>
-                <strong>ID:</strong> {selectedCard.id}
-              </p>
-              <p>
-                <strong>Status:</strong> {selectedCard.status}
-              </p>
-              <p>
-                <strong>Health:</strong> {selectedCard.health}
-              </p>
-              <p>
-                <strong>Image:</strong> {selectedCard.image}
-              </p>
-              <p>
-                <strong>Uptime:</strong> {selectedCard.uptime}
-              </p>
-              <p>
-                <strong>Restarts:</strong> {selectedCard.restarts}
-              </p>
-              <p>
-                <strong>CPU:</strong> {selectedCard.cpu}
-              </p>
-              <p>
-                <strong>Memory:</strong> {selectedCard.memory}
-              </p>
-              <p>
-                <strong>Net I/O:</strong> {selectedCard.net}
-              </p>
-              <p>
-                <strong>Ports:</strong> {selectedCard.ports}
-              </p>
+            {/* Chart in Popup */}
+            <div style={{ height: "400px", marginBottom: "2rem" }}>
+              <Line
+                data={{
+                  labels,
+                  datasets: [
+                    {
+                      label: selectedCard.name,
+                      data: history[selectedCard.name]?.[metric] || [],
+                      borderColor: "#60a5fa",
+                      backgroundColor: "#60a5fa33",
+                      fill: false,
+                      tension: 0.3,
+                    },
+                  ],
+                }}
+                options={chartOptions}
+              />
             </div>
+
+            {/* Split Details */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-gray-700 text-sm">
+              <div className="space-y-2">
+                <p>
+                  <strong>ID:</strong> {selectedCard.id}
+                </p>
+                <p>
+                  <strong>Status:</strong> {selectedCard.status}
+                </p>
+                <p>
+                  <strong>Health:</strong> {selectedCard.health}
+                </p>
+                <p>
+                  <strong>Image:</strong> {selectedCard.image}
+                </p>
+                <p>
+                  <strong>Uptime:</strong> {selectedCard.uptime}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <p>
+                  <strong>Restarts:</strong> {selectedCard.restarts}
+                </p>
+                <p>
+                  <strong>CPU:</strong> {selectedCard.cpu}
+                </p>
+                <p>
+                  <strong>Memory:</strong> {selectedCard.memory}
+                </p>
+                <p>
+                  <strong>Net I/O:</strong> {selectedCard.net}
+                </p>
+                <p>
+                  <strong>Ports:</strong> {selectedCard.ports}
+                </p>
+              </div>
+            </div>
+
             <button
               className="mt-6 bg-gray-800 text-white px-4 py-2 rounded-xl hover:bg-gray-700 transition w-full"
               onClick={() => setSelectedCard(null)}
+            >
+              Close
+            </button>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Share App Popup */}
+      {sharePopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <motion.div
+            className="bg-white rounded-2xl p-6 w-96 shadow-2xl"
+            initial={{ scale: 0.7, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.7, opacity: 0 }}
+          >
+            <h2 className="text-xl font-bold mb-4">Share "{selectedCard?.name || 'App'}"</h2>
+            <div className="text-gray-700 text-sm space-y-4">
+              <div>
+                <p className="font-semibold">People with access</p>
+              </div>
+              <div>
+                <p className="font-semibold">General access</p>
+                <p>Only people with access can open with the link</p>
+              </div>
+            </div>
+            <button
+              className="mt-6 bg-gray-800 text-white px-4 py-2 rounded-xl hover:bg-gray-700 transition w-full"
+              onClick={() => setSharePopup(false)}
             >
               Close
             </button>

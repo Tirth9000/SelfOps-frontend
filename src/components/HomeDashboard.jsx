@@ -1,5 +1,7 @@
 // src/components/HomeDashboard.jsx
 import React, { useState, useRef } from "react";
+import { motion } from "framer-motion";
+import { Share2, Crown } from "lucide-react";
 import {
   CpuChipIcon,
   CloudIcon,
@@ -10,33 +12,33 @@ import {
   BellIcon,
   Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as ChartTooltip,
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-} from "recharts";
+// import {
+//   LineChart,
+//   Line,
+//   XAxis,
+//   YAxis,
+//   CartesianGrid,
+//   Tooltip as ChartTooltip,
+//   ResponsiveContainer,
+//   AreaChart,
+//   Area,
+// } from "recharts";
 
-const cpuData = [
-  { time: "10 AM", usage: 45 },
-  { time: "11 AM", usage: 55 },
-  { time: "12 PM", usage: 70 },
-  { time: "1 PM", usage: 65 },
-  { time: "2 PM", usage: 60 },
-];
+// const cpuData = [
+//   { time: "10 AM", usage: 45 },
+//   { time: "11 AM", usage: 55 },
+//   { time: "12 PM", usage: 70 },
+//   { time: "1 PM", usage: 65 },
+//   { time: "2 PM", usage: 60 },
+// ];
 
-const memoryData = [
-  { time: "10 AM", usage: 30 },
-  { time: "11 AM", usage: 40 },
-  { time: "12 PM", usage: 50 },
-  { time: "1 PM", usage: 48 },
-  { time: "2 PM", usage: 55 },
-];
+// const memoryData = [
+//   { time: "10 AM", usage: 30 },
+//   { time: "11 AM", usage: 40 },
+//   { time: "12 PM", usage: 50 },
+//   { time: "1 PM", usage: 48 },
+//   { time: "2 PM", usage: 55 },
+// ];
 
 const HomeDashboard = () => {
   const [activePage, setActivePage] = useState("Home");
@@ -90,6 +92,30 @@ const HomeDashboard = () => {
     tooltip.style.marginTop = "0";
   };
 
+  const applications = [
+    {
+      name: "Analytica",
+      type: "owned",
+      logo: "https://cdn-icons-png.flaticon.com/512/1828/1828673.png",
+    },
+    {
+      name: "SelfOps",
+      type: "shared",
+      logo: "https://cdn-icons-png.flaticon.com/512/906/906175.png",
+    },
+    {
+      name: "E-Library",
+      type: "owned",
+      logo: "https://cdn-icons-png.flaticon.com/512/2991/2991108.png",
+    },
+    {
+      name: "ML Monitor",
+      type: "shared",
+      logo: "https://cdn-icons-png.flaticon.com/512/2721/2721297.png",
+    },
+  ];
+
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       {/* Navbar */}
@@ -109,7 +135,6 @@ const HomeDashboard = () => {
           <div className="flex items-center gap-6">
             {[
               { icon: HomeIcon, title: "Home", color: "indigo", link: "/homedashboard" },
-              { icon: CubeIcon, title: "Containers", color: "green", link: "/applications" }, // Changed link
               { icon: BellIcon, title: "Alerts", color: "red", link: "#" },
               { icon: Cog6ToothIcon, title: "Settings", color: "yellow", link: "#" },
             ].map((item, idx) => (
@@ -170,16 +195,63 @@ const HomeDashboard = () => {
         </div>
       </header>
 
+     
       {/* Main content */}
       <main className="flex-1 p-6 overflow-auto">
         {/* Welcome Section */}
         <section className="px-6 py-12 max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-gray-800 mb-3 animate-slide-down">Welcome back 👋</h2>
-          <p className="text-gray-600 text-lg">Here’s a quick overview of your containers, resources, and system health.</p>
+          <h2 className="text-3xl font-bold text-gray-800 mb-3 animate-slide-down">Welcome to your Applications</h2>
+          {/* <p className="text-gray-600 text-lg">Here’s a quick overview of your containers, resources, and system health.</p> */}
+        </section>
+
+        <section className="p-8">
+          <h2 className="text-2xl font-semibold mb-6 text-gray-800">
+            Your Applications
+          </h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {applications.map((app, index) => (
+              <motion.div
+                key={index}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+                className="relative bg-gradient-to-br from-gray-100 to-gray-50 rounded-2xl shadow-md border border-gray-200 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden"
+              >
+                {/* Status Icon */}
+                <div className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-sm">
+                  {app.type === "shared" ? (
+                    <Share2 size={18} className="text-blue-600" />
+                  ) : (
+                    <Crown size={18} className="text-yellow-500" />
+                  )}
+                </div>
+
+                {/* Card Content */}
+                <div className="flex flex-col justify-between h-44 p-5">
+                  {/* Logo Section */}
+                  <div className="flex-grow flex items-center justify-center">
+                    <img
+                      src={app.logo}
+                      alt={`${app.name} logo`}
+                      className="w-16 h-16 object-contain rounded-xl shadow-inner bg-white p-2"
+                    />
+                  </div>
+
+                  {/* Name Section */}
+                  <div className="text-center mt-3">
+                    <p className="font-medium text-gray-800 text-lg">{app.name}</p>
+                    <p className="text-sm text-gray-500">
+                      {app.type === "shared" ? "Shared with you" : "Owned by you"}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </section>
 
         {/* Quick Stats */}
-        <section className="px-6 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* <section className="px-6 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
           {[ 
             { icon: CpuChipIcon, title: "CPU Usage", value: "65%", color: "gray-800" },
             { icon: CloudIcon, title: "Active Containers", value: "12", color: "blue-600" },
@@ -197,11 +269,11 @@ const HomeDashboard = () => {
               </p>
             </div>
           ))}
-        </section>
+        </section> */}
 
         {/* Charts Section */}
-        <section className="px-6 py-16 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* CPU Chart */}
+        {/* <section className="px-6 py-16 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+          CPU Chart
           <div className="bg-white p-6 rounded-2xl shadow-md hover:shadow-lg transition-transform transform hover:scale-[1.02] duration-300">
             <h3 className="text-lg font-semibold mb-4">CPU Usage Over Time</h3>
             <ResponsiveContainer width="100%" height={250}>
@@ -215,7 +287,7 @@ const HomeDashboard = () => {
             </ResponsiveContainer>
           </div>
 
-          {/* Memory Chart */}
+          Memory Chart
           <div className="bg-white p-6 rounded-2xl shadow-md hover:shadow-lg transition-transform transform hover:scale-[1.02] duration-300">
             <h3 className="text-lg font-semibold mb-4">Memory Usage Over Time</h3>
             <ResponsiveContainer width="100%" height={250}>
@@ -234,10 +306,10 @@ const HomeDashboard = () => {
               </AreaChart>
             </ResponsiveContainer>
           </div>
-        </section>
+        </section> */}
 
         {/* Deployment Section */}
-        <section className="px-6 py-16 max-w-7xl mx-auto">
+        {/* <section className="px-6 py-16 max-w-7xl mx-auto">
           <div className="bg-gradient-to-r from-gray-800 to-gray-700 text-white p-10 rounded-3xl shadow-md hover:shadow-lg transition-transform transform hover:scale-[1.02] duration-300">
             <div className="flex flex-col md:flex-row justify-between items-center">
               <div>
@@ -252,10 +324,10 @@ const HomeDashboard = () => {
               </button>
             </div>
           </div>
-        </section>
+        </section> */}
 
         {/* Recent Activity */}
-        <section className="px-6 py-12 max-w-7xl mx-auto">
+        {/* <section className="px-6 py-12 max-w-7xl mx-auto">
           <h3 className="text-2xl font-bold text-gray-800 mb-6">Recent Activity</h3>
           <ul className="space-y-4">
             {[
@@ -272,12 +344,12 @@ const HomeDashboard = () => {
               </li>
             ))}
           </ul>
-        </section>
+        </section> */}
 
         {/* Footer */}
-        <footer className="bg-white shadow-md py-6 mt-12 text-center text-gray-500">
+        {/* <footer className="bg-white shadow-md py-6 mt-12 text-center text-gray-500">
           © 2025 SelfOps. All rights reserved.
-        </footer>
+        </footer> */}
       </main>
     </div>
   );

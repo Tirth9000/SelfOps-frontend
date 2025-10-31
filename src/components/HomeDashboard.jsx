@@ -1,8 +1,7 @@
 // src/components/HomeDashboard.jsx
 import React, { useState, useRef, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Share2, Crown } from "lucide-react";
-import axios from "axios";
+import { X, Share2, Crown } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import API from "../components/axiosInstance.js";
 import {
@@ -49,7 +48,6 @@ const HomeDashboard = () => {
 
   const [applications, setApplications] = useState([]);
   const navigate = useNavigate();
-
 
   const handleMouseEnter = (key) => {
     const tooltip = tooltipRefs.current[key];
@@ -98,28 +96,23 @@ const HomeDashboard = () => {
     tooltip.style.marginTop = "0";
   };
 
-
   // Fetch data from FastAPI
   useEffect(() => {
     const fetchApps = async () => {
       try {
         const token = localStorage.getItem("token");
 
-        const shared_app_response = await API.get("/web/shared-apps",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        ); // 👈 your FastAPI endpoint
+        const shared_app_response = await API.get("/web/shared-apps", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }); // 👈 your FastAPI endpoint
 
-        const my_app_response = await API.get("/web/my-apps",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        )
+        const my_app_response = await API.get("/web/my-apps", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         const shared_app_formatted = (
           shared_app_response?.data?.apps || []
@@ -138,7 +131,6 @@ const HomeDashboard = () => {
             type: "owned",
           })
         );
-        console.log(shared_app_formatted)
 
         const formatted = [...my_app_formatted, ...shared_app_formatted];
 
@@ -151,6 +143,27 @@ const HomeDashboard = () => {
     fetchApps();
   }, []);
 
+  const [showPopup, setShowPopup] = useState(false);
+  const [roomCode, setRoomCode] = useState("");
+
+  const handleJoin = async(e) => {
+    e.preventDefault();
+    const token = localStorage.getItem("token");
+
+    if (roomCode.trim() !== "") {
+      const response = await API.post("/web/sharelink/join",
+        { share_token: roomCode },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+      console.log(response);
+    }
+    setShowPopup(false);
+    window.location.reload();
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -231,7 +244,68 @@ const HomeDashboard = () => {
                 )}
               </div>
             ))}
+            <div className="flex justify-center text-center items-center">
+              <button
+                onClick={() => setShowPopup(true)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-all duration-200 shadow-lg"
+              >
+                JOIN
+              </button>
 
+              {/* Popup */}
+              <AnimatePresence>
+                {showPopup && (
+                  <motion.div
+                    className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    <motion.div
+                      className="bg-white rounded-2xl p-6 w-96 shadow-2xl relative"
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.8, opacity: 0 }}
+                      transition={{ duration: 0.3, ease: "easeOut" }}
+                    >
+                      {/* Close Button */}
+                      <button
+                        onClick={() => setShowPopup(false)}
+                        className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+                      >
+                        <X size={20} />
+                      </button>
+
+                      <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                        Join Shared Application
+                      </h2>
+
+                      <p className="text-s mb-2">
+                        Paste the shared link here...
+                      </p>
+
+                      <form onSubmit={handleJoin} className="space-y-4">
+                        <input
+                          type="text"
+                          placeholder="Enter Room Code"
+                          value={roomCode}
+                          onChange={(e) => setRoomCode(e.target.value)}
+                          className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-gray-800 focus:outline-none text-gray-700 placeholder-gray-400"
+                          required
+                        />
+
+                        <button
+                          type="submit"
+                          className="w-full bg-gray-900 text-white py-3 rounded-xl hover:bg-gray-800 transition-all duration-200 font-medium"
+                        >
+                          Join Now
+                        </button>
+                      </form>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
             <button
               className="px-4 py-2 bg-gray-800 text-white rounded-xl font-semibold hover:bg-gray-700 transition transform hover:scale-105 shadow-md"
               onClick={() => {
@@ -269,7 +343,13 @@ const HomeDashboard = () => {
                   key={app.id}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => navigate(`/dashboard/${app.id}`)}
+                  onClick={() =>
+                    navigate(
+                      `/dashboard/${app.id}/${
+                        app.type === "shared" ? "shared" : "owned"
+                      }`
+                    )
+                  }
                   className="relative bg-gradient-to-br from-gray-100 to-gray-50 rounded-2xl shadow-md border border-gray-200 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden"
                 >
                   {/* Status Icon */}

@@ -37,26 +37,9 @@ const Dashboard = () => {
   const [shareToken, setShareToken] = useState("");
 
   const { id } = useParams();
+  const { type } = useParams();
 
-  // const [cards, setCards] = useState([
-  //   {
-  //     name: "nginx-app",
-  //     id: "1a2b3c4d",
-  //     status: "running",
-  //     health: "healthy",
-  //     image: "nginx:1.25",
-  //     uptime: "2h 14m",
-  //     restarts: 1,
-  //     cpu: "12.5%",
-  //     memory: "256MB / 1GB",
-  //     net: "12.4MB / 8.9MB",
-  //     ports: "80→8080, 443→8443",
-  //     update: "1.26",
-  //     bgColor: "bg-blue-50",
-  //   }
-  // ]);
-
-  // WebSocket connection
+// websocket connection
   useEffect(() => {
     const ws = new io("http://localhost:8000", { path: "/ws" });
 
@@ -67,6 +50,7 @@ const Dashboard = () => {
     });
 
     ws.on("live_message", (data) => {
+      console.log(data);
       setHistory((prev) => {
         const updated = { ...prev };
         data.forEach((container) => {
@@ -173,24 +157,41 @@ const Dashboard = () => {
     const fetchShareToken = async () => {
       try {
         const token = localStorage.getItem("token");
+        const savedShareToken = localStorage.getItem("shareToken");
+        const savedTimestamp = localStorage.getItem("shareTokenTimestamp");
 
+        const now = Date.now();
+        const expiryTime = 24 * 60 * 60 * 1000; // 24 hours in ms
+
+        // ✅ If token exists and not expired, reuse it
+        if (
+          savedShareToken &&
+          savedTimestamp &&
+          now - savedTimestamp < expiryTime
+        ) {
+          setShareToken(savedShareToken);
+          return;
+        }
+
+        // ✅ Otherwise, fetch a new one
         if (sharePopup && shareToken === "") {
           const response = await API.post(
             "/web/sharelink/create",
             { app_id: id },
             {
               headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
               },
             }
-          ); 
+          );
 
-          const timeout = setTimeout(() => {
-            setShareToken("");
-          }, 24 * 60 * 60 * 1000);
+          const newToken = response.data.share_token;
 
+          // Save new token and timestamp
+          localStorage.setItem("shareToken", newToken);
+          localStorage.setItem("shareTokenTimestamp", now.toString());
 
-          setShareToken(response.data.share_token);
+          setShareToken(newToken);
         }
       } catch (error) {
         console.error("Error fetching share token:", error);
@@ -216,12 +217,14 @@ const Dashboard = () => {
           <h1 className="text-2xl font-extrabold text-gray-800">
             📊 SelfOps - Container Dashboard
           </h1>
+          {type === "owned" ?  
           <button
             onClick={() => setSharePopup(true)}
             className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition shadow"
           >
             Share App
           </button>
+          : null }
         </div>
         <div className="border-b border-gray-200"></div>
       </div>

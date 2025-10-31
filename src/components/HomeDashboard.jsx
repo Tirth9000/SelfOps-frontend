@@ -1,7 +1,10 @@
 // src/components/HomeDashboard.jsx
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Share2, Crown } from "lucide-react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import API from "../components/axiosInstance.js";
 import {
   CpuChipIcon,
   CloudIcon,
@@ -44,7 +47,10 @@ const HomeDashboard = () => {
   const [activePage, setActivePage] = useState("Home");
   const tooltipRefs = useRef({});
 
-  // Tooltip smart positioning
+  const [applications, setApplications] = useState([]);
+  const navigate = useNavigate();
+
+
   const handleMouseEnter = (key) => {
     const tooltip = tooltipRefs.current[key];
     if (!tooltip) return;
@@ -92,28 +98,58 @@ const HomeDashboard = () => {
     tooltip.style.marginTop = "0";
   };
 
-  const applications = [
-    {
-      name: "Analytica",
-      type: "owned",
-      logo: "https://cdn-icons-png.flaticon.com/512/1828/1828673.png",
-    },
-    {
-      name: "SelfOps",
-      type: "shared",
-      logo: "https://cdn-icons-png.flaticon.com/512/906/906175.png",
-    },
-    {
-      name: "E-Library",
-      type: "owned",
-      logo: "https://cdn-icons-png.flaticon.com/512/2991/2991108.png",
-    },
-    {
-      name: "ML Monitor",
-      type: "shared",
-      logo: "https://cdn-icons-png.flaticon.com/512/2721/2721297.png",
-    },
-  ];
+
+  // Fetch data from FastAPI
+  useEffect(() => {
+    const fetchApps = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const shared_app_response = await API.get("/web/shared-apps",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        ); // 👈 your FastAPI endpoint
+
+        const my_app_response = await API.get("/web/my-apps",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        )
+
+        const shared_app_formatted = (
+          shared_app_response?.data?.apps || []
+        ).map((app) => ({
+          id: app._id,
+          name: app.app_name,
+          logo: "https://cdn-icons-png.flaticon.com/512/1828/1828673.png",
+          type: "shared",
+        }));
+
+        const my_app_formatted = (my_app_response?.data?.apps || []).map(
+          (app) => ({
+            id: app._id,
+            name: app.app_name,
+            logo: "https://cdn-icons-png.flaticon.com/512/1828/1828673.png",
+            type: "owned",
+          })
+        );
+        console.log(shared_app_formatted)
+
+        const formatted = [...my_app_formatted, ...shared_app_formatted];
+
+        setApplications(formatted);
+      } catch (err) {
+        console.error("Error fetching applications:", err);
+      }
+    };
+
+    fetchApps();
+  }, []);
 
 
   return (
@@ -134,9 +170,19 @@ const HomeDashboard = () => {
 
           <div className="flex items-center gap-6">
             {[
-              { icon: HomeIcon, title: "Home", color: "indigo", link: "/homedashboard" },
+              {
+                icon: HomeIcon,
+                title: "Home",
+                color: "indigo",
+                link: "/homedashboard",
+              },
               { icon: BellIcon, title: "Alerts", color: "red", link: "#" },
-              { icon: Cog6ToothIcon, title: "Settings", color: "yellow", link: "#" },
+              {
+                icon: Cog6ToothIcon,
+                title: "Settings",
+                color: "yellow",
+                link: "#",
+              },
             ].map((item, idx) => (
               <div
                 key={idx}
@@ -145,7 +191,11 @@ const HomeDashboard = () => {
                 onMouseLeave={() => handleMouseLeave(idx)}
               >
                 <button
-                  className={`flex items-center text-gray-600 hover:text-${item.color}-600 transition duration-300 p-2 rounded-lg hover:bg-${item.color}-50 ${
+                  className={`flex items-center text-gray-600 hover:text-${
+                    item.color
+                  }-600 transition duration-300 p-2 rounded-lg hover:bg-${
+                    item.color
+                  }-50 ${
                     activePage === item.title ? `text-${item.color}-600` : ""
                   }`}
                   onClick={() => {
@@ -195,12 +245,13 @@ const HomeDashboard = () => {
         </div>
       </header>
 
-     
       {/* Main content */}
       <main className="flex-1 p-6 overflow-auto">
         {/* Welcome Section */}
         <section className="px-6 py-12 max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-gray-800 mb-3 animate-slide-down">Welcome to your Applications</h2>
+          <h2 className="text-3xl font-bold text-gray-800 mb-3 animate-slide-down">
+            Welcome to your Applications
+          </h2>
           {/* <p className="text-gray-600 text-lg">Here’s a quick overview of your containers, resources, and system health.</p> */}
         </section>
 
@@ -209,147 +260,53 @@ const HomeDashboard = () => {
             Your Applications
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {applications.map((app, index) => (
-              <motion.div
-                key={index}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.98 }}
-                className="relative bg-gradient-to-br from-gray-100 to-gray-50 rounded-2xl shadow-md border border-gray-200 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden"
-              >
-                {/* Status Icon */}
-                <div className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-sm">
-                  {app.type === "shared" ? (
-                    <Share2 size={18} className="text-blue-600" />
-                  ) : (
-                    <Crown size={18} className="text-yellow-500" />
-                  )}
-                </div>
-
-                {/* Card Content */}
-                <div className="flex flex-col justify-between h-44 p-5">
-                  {/* Logo Section */}
-                  <div className="flex-grow flex items-center justify-center">
-                    <img
-                      src={app.logo}
-                      alt={`${app.name} logo`}
-                      className="w-16 h-16 object-contain rounded-xl shadow-inner bg-white p-2"
-                    />
+          {applications.length === 0 ? (
+            <p className="text-gray-500">Loading your applications...</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {applications.map((app, index) => (
+                <motion.div
+                  key={app.id}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => navigate(`/dashboard/${app.id}`)}
+                  className="relative bg-gradient-to-br from-gray-100 to-gray-50 rounded-2xl shadow-md border border-gray-200 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden"
+                >
+                  {/* Status Icon */}
+                  <div className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-sm">
+                    {app.type === "shared" ? (
+                      <Share2 size={18} className="text-blue-600" />
+                    ) : (
+                      <Crown size={18} className="text-yellow-500" />
+                    )}
                   </div>
 
-                  {/* Name Section */}
-                  <div className="text-center mt-3">
-                    <p className="font-medium text-gray-800 text-lg">{app.name}</p>
-                    <p className="text-sm text-gray-500">
-                      {app.type === "shared" ? "Shared with you" : "Owned by you"}
-                    </p>
+                  {/* Card Content */}
+                  <div className="flex flex-col justify-between h-44 p-5">
+                    {/* Logo Section */}
+                    <div className="flex-grow flex items-center justify-center">
+                      <img
+                        src={app.logo}
+                        alt={`${app.name} logo`}
+                        className="w-16 h-16 object-contain rounded-xl shadow-inner bg-white p-2"
+                      />
+                    </div>
+
+                    {/* Name Section */}
+                    <div className="text-center mt-3">
+                      <p className="font-medium text-gray-800 text-lg">
+                        {app.name}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {app.type === "shared"}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </section>
-
-        {/* Quick Stats */}
-        {/* <section className="px-6 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-          {[ 
-            { icon: CpuChipIcon, title: "CPU Usage", value: "65%", color: "gray-800" },
-            { icon: CloudIcon, title: "Active Containers", value: "12", color: "blue-600" },
-            { icon: ShieldCheckIcon, title: "System Health", value: "Healthy", color: "green-600" },
-          ].map((stat, idx) => (
-            <div
-              key={idx}
-              className="bg-white p-6 rounded-2xl shadow-md hover:shadow-lg transition-transform transform hover:-translate-y-2 duration-300 cursor-pointer"
-            >
-              <stat.icon className={`h-10 w-10 text-${stat.color} mb-3`} />
-              <h3 className="text-lg font-semibold">{stat.title}</h3>
-              <p className={`text-gray-600`}>
-                {stat.title === "System Health" ? "Status:" : "Current:"}{" "}
-                <span className={`font-bold text-${stat.color}`}>{stat.value}</span>
-              </p>
-            </div>
-          ))}
-        </section> */}
-
-        {/* Charts Section */}
-        {/* <section className="px-6 py-16 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-          CPU Chart
-          <div className="bg-white p-6 rounded-2xl shadow-md hover:shadow-lg transition-transform transform hover:scale-[1.02] duration-300">
-            <h3 className="text-lg font-semibold mb-4">CPU Usage Over Time</h3>
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={cpuData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="time" />
-                <YAxis />
-                <ChartTooltip />
-                <Line type="monotone" dataKey="usage" stroke="#374151" strokeWidth={3} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-          Memory Chart
-          <div className="bg-white p-6 rounded-2xl shadow-md hover:shadow-lg transition-transform transform hover:scale-[1.02] duration-300">
-            <h3 className="text-lg font-semibold mb-4">Memory Usage Over Time</h3>
-            <ResponsiveContainer width="100%" height={250}>
-              <AreaChart data={memoryData}>
-                <defs>
-                  <linearGradient id="colorMem" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#1f2937" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#1f2937" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="time" />
-                <YAxis />
-                <ChartTooltip />
-                <Area type="monotone" dataKey="usage" stroke="#1f2937" fillOpacity={1} fill="url(#colorMem)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </section> */}
-
-        {/* Deployment Section */}
-        {/* <section className="px-6 py-16 max-w-7xl mx-auto">
-          <div className="bg-gradient-to-r from-gray-800 to-gray-700 text-white p-10 rounded-3xl shadow-md hover:shadow-lg transition-transform transform hover:scale-[1.02] duration-300">
-            <div className="flex flex-col md:flex-row justify-between items-center">
-              <div>
-                <h3 className="text-2xl font-bold mb-3">Deploy Your Application</h3>
-                <p className="text-gray-300 max-w-lg">
-                  Quickly deploy new containers and manage them from one place. Scale up or down in seconds.
-                </p>
-              </div>
-              <button className="mt-6 md:mt-0 px-6 py-3 bg-white text-gray-800 font-semibold rounded-xl hover:bg-gray-200 transition transform hover:scale-105 duration-300 flex items-center gap-2">
-                <RocketLaunchIcon className="h-5 w-5" />
-                Deploy Now
-              </button>
-            </div>
-          </div>
-        </section> */}
-
-        {/* Recent Activity */}
-        {/* <section className="px-6 py-12 max-w-7xl mx-auto">
-          <h3 className="text-2xl font-bold text-gray-800 mb-6">Recent Activity</h3>
-          <ul className="space-y-4">
-            {[
-              { name: "api-service", status: "Deployed successfully", time: "2 hours ago" },
-              { name: "auth-service", status: "Restarted due to update", time: "5 hours ago" },
-              { name: "frontend-app", status: "Scaled to 3 instances", time: "Yesterday" },
-            ].map((act, idx) => (
-              <li
-                key={idx}
-                className="bg-white p-5 rounded-xl shadow-md hover:shadow-lg transition-transform transform hover:-translate-y-1 duration-300"
-              >
-                <p className="text-gray-800 font-semibold">Container "{act.name}"</p>
-                <p className="text-gray-500 text-sm">{act.status} · {act.time}</p>
-              </li>
-            ))}
-          </ul>
-        </section> */}
-
-        {/* Footer */}
-        {/* <footer className="bg-white shadow-md py-6 mt-12 text-center text-gray-500">
-          © 2025 SelfOps. All rights reserved.
-        </footer> */}
       </main>
     </div>
   );

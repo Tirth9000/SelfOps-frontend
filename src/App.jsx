@@ -16,7 +16,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/dashboard" element={<Dashboard />} /> {/* ✅ Public Dashboard */}
+        <Route path="/dashboard/:id" element={<Dashboard />} /> {/* ✅ Public Dashboard */}
 
         {/* Protected routes */}
         <Route

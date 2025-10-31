@@ -1,6 +1,8 @@
 // src/components/Dashboard.jsx
 import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
+import axios from "axios";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -24,67 +26,48 @@ ChartJS.register(
   Legend
 );
 
+
 const Dashboard = () => {
+
   const [metric, setMetric] = useState("cpu");
   const [history, setHistory] = useState({});
   const [selectedCard, setSelectedCard] = useState(null);
   const [sharePopup, setSharePopup] = useState(false);
-  const [cards, setCards] = useState([
-    {
-      name: "nginx-app",
-      id: "1a2b3c4d",
-      status: "running",
-      health: "healthy",
-      image: "nginx:1.25",
-      uptime: "2h 14m",
-      restarts: 1,
-      cpu: "12.5%",
-      memory: "256MB / 1GB",
-      net: "12.4MB / 8.9MB",
-      ports: "80→8080, 443→8443",
-      update: "1.26",
-      bgColor: "bg-blue-50",
-    },
-    {
-      name: "redis-cache",
-      id: "5e6f7g8h",
-      status: "exited",
-      health: "unhealthy",
-      image: "redis:7.0",
-      uptime: "-",
-      restarts: 3,
-      cpu: "0%",
-      memory: "0MB / 512MB",
-      net: "0MB / 0MB",
-      ports: "6379→6379",
-      bgColor: "bg-red-50",
-    },
-    {
-      name: "db-container",
-      id: "9i0j1k2l",
-      status: "running",
-      health: "healthy",
-      image: "postgres:15",
-      uptime: "3h 50m",
-      restarts: 0,
-      cpu: "8%",
-      memory: "512MB / 2GB",
-      net: "10MB / 5MB",
-      ports: "5432→5432",
-      bgColor: "bg-green-50",
-    },
-  ]);
+  const [containers, setContainers] = useState([]);
+
+  const { id } = useParams();
+
+  // const [cards, setCards] = useState([
+  //   {
+  //     name: "nginx-app",
+  //     id: "1a2b3c4d",
+  //     status: "running",
+  //     health: "healthy",
+  //     image: "nginx:1.25",
+  //     uptime: "2h 14m",
+  //     restarts: 1,
+  //     cpu: "12.5%",
+  //     memory: "256MB / 1GB",
+  //     net: "12.4MB / 8.9MB",
+  //     ports: "80→8080, 443→8443",
+  //     update: "1.26",
+  //     bgColor: "bg-blue-50",
+  //   }
+  // ]);
 
   // WebSocket connection
   useEffect(() => {
+
     const ws = new io("http://localhost:8000", { path: "/ws" });
 
     ws.on("connect", () => {
-      ws.emit("join", { username: "user2", room: "room1" });
+      ws.emit("join", {room: "web-" + id});
+      console.log(id);
       console.log("WebSocket connected");
     });
 
     ws.on("live_message", (data) => {
+      console.log(data)
       setHistory((prev) => {
         const updated = { ...prev };
         data.forEach((container) => {
@@ -149,6 +132,46 @@ const Dashboard = () => {
     },
   };
 
+  useEffect(() => {
+    const fetchAppsContainers = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+
+        const app_containers = await axios.get(
+          `http://localhost:8000/web/app/containers/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        
+        console.log(app_containers.data)
+        
+        setContainers(app_containers.data.app_containers);
+        // const formatted = app_containers.data.app_containers.map((container, index) => ({
+        //   id: container._id,
+        //   name: container.container_name,
+        //   image: container.image,
+        //   status: container.status,
+        //   uptime: container.uptime,
+        //   cpu_percent: container.cpu_percent,
+        //   memory: container.memory_usage,
+        //   memory_limit: container.memory_limit,
+        // }));
+
+        // console.log(formatted)
+        // setContainers(formatted);
+
+      } catch (err) {
+        console.error("Error fetching applications:", err);
+      }
+    };
+
+    fetchAppsContainers();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Fake Navbar like Applications page */}
@@ -188,52 +211,55 @@ const Dashboard = () => {
             </button>
           ))}
         </div>
-        <div style={{ height: "500px" }}>
+        <div style={{width: "80%"}}>
           <Line data={chartData} options={chartOptions} />
         </div>
       </motion.div>
 
       {/* Container Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-6">
-        {cards.map((c, idx) => (
+        {containers.map((container, index) => (
           <motion.div
-            key={idx}
-            className={`${c.bgColor} rounded-2xl p-6 shadow hover:shadow-lg transition cursor-pointer`}
+            key={container.container_id}
+            className={`blue rounded-2xl p-6 shadow hover:shadow-lg transition cursor-pointer`}
             whileHover={{ scale: 1.03 }}
-            onClick={() => setSelectedCard(c)}
           >
             <div className="flex justify-between items-center mb-4">
               <div>
-                <h3 className="font-semibold text-lg text-gray-800">{c.name}</h3>
-                <p className="text-gray-500 text-sm">ID: {c.id}</p>
+                <h3 className="font-semibold text-lg text-gray-800">
+                  {container.container_name}
+                </h3>
+                <p className="text-gray-500 text-sm">
+                  ID: {container.container_id}
+                </p>
               </div>
               <div className="flex gap-2">
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                    c.status === "running"
+                    container.status === "running"
                       ? "bg-green-100 text-green-700"
                       : "bg-red-100 text-red-700"
                   }`}
                 >
-                  ● {c.status.charAt(0).toUpperCase() + c.status.slice(1)}
+                  ● {container.status}
                 </span>
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                    c.health === "healthy"
+                    container.health === "healthy"
                       ? "bg-blue-100 text-blue-700"
                       : "bg-red-50 text-red-700"
                   }`}
                 >
-                  {c.health === "healthy" ? "✓ Healthy" : "✕ Unhealthy"}
+                  {container.health === "healthy" ? "✓ Healthy" : "✕ Unhealthy"}
                 </span>
               </div>
             </div>
-            <div className="text-sm text-gray-700 space-y-1">
+            {/* <div className="text-sm text-gray-700 space-y-1">
               <p>🖼 {c.image}</p>
               <p>⏱ Uptime: {c.uptime}</p>
               <p>💻 CPU: {c.cpu}</p>
               <p>📈 Memory: {c.memory}</p>
-            </div>
+            </div> */}
           </motion.div>
         ))}
       </div>
@@ -325,7 +351,9 @@ const Dashboard = () => {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.7, opacity: 0 }}
           >
-            <h2 className="text-xl font-bold mb-4">Share "{selectedCard?.name || 'App'}"</h2>
+            <h2 className="text-xl font-bold mb-4">
+              Share "{selectedCard?.name || "App"}"
+            </h2>
             <div className="text-gray-700 text-sm space-y-4">
               <div>
                 <p className="font-semibold">People with access</p>

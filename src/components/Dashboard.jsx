@@ -1,8 +1,9 @@
 // src/components/Dashboard.jsx
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { ClipboardIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 import { io } from "socket.io-client";
-import axios from "axios";
+import API from "../components/axiosInstance.js";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -28,12 +29,12 @@ ChartJS.register(
 
 
 const Dashboard = () => {
-
   const [metric, setMetric] = useState("cpu");
   const [history, setHistory] = useState({});
   const [selectedCard, setSelectedCard] = useState(null);
   const [sharePopup, setSharePopup] = useState(false);
   const [containers, setContainers] = useState([]);
+  const [shareToken, setShareToken] = useState("");
 
   const { id } = useParams();
 
@@ -57,17 +58,15 @@ const Dashboard = () => {
 
   // WebSocket connection
   useEffect(() => {
-
     const ws = new io("http://localhost:8000", { path: "/ws" });
 
     ws.on("connect", () => {
-      ws.emit("join", {room: "web-" + id});
+      ws.emit("join", { room: "web-" + id });
       console.log(id);
       console.log("WebSocket connected");
     });
 
     ws.on("live_message", (data) => {
-      console.log(data)
       setHistory((prev) => {
         const updated = { ...prev };
         data.forEach((container) => {
@@ -137,18 +136,17 @@ const Dashboard = () => {
       try {
         const token = localStorage.getItem("token");
 
-
-        const app_containers = await axios.get(
-          `http://localhost:8000/web/app/containers/${id}`,
+        const app_containers = await API.get(
+          `/web/app/containers/${id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }
         );
-        
-        console.log(app_containers.data)
-        
+
+        console.log(app_containers.data);
+
         setContainers(app_containers.data.app_containers);
         // const formatted = app_containers.data.app_containers.map((container, index) => ({
         //   id: container._id,
@@ -163,7 +161,6 @@ const Dashboard = () => {
 
         // console.log(formatted)
         // setContainers(formatted);
-
       } catch (err) {
         console.error("Error fetching applications:", err);
       }
@@ -171,6 +168,45 @@ const Dashboard = () => {
 
     fetchAppsContainers();
   }, []);
+
+  useEffect(() => {
+    const fetchShareToken = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        if (sharePopup && shareToken === "") {
+          const response = await API.post(
+            "/web/sharelink/create",
+            { app_id: id },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`
+              },
+            }
+          ); 
+
+          const timeout = setTimeout(() => {
+            setShareToken("");
+          }, 24 * 60 * 60 * 1000);
+
+
+          setShareToken(response.data.share_token);
+        }
+      } catch (error) {
+        console.error("Error fetching share token:", error);
+      }
+    };
+
+    fetchShareToken();
+  }, [sharePopup]);
+
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(shareToken);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -211,7 +247,7 @@ const Dashboard = () => {
             </button>
           ))}
         </div>
-        <div style={{width: "80%"}}>
+        <div style={{ width: "80%" }}>
           <Line data={chartData} options={chartOptions} />
         </div>
       </motion.div>
@@ -344,23 +380,40 @@ const Dashboard = () => {
 
       {/* Share App Popup */}
       {sharePopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex text-center items-center justify-center z-50">
           <motion.div
             className="bg-white rounded-2xl p-6 w-96 shadow-2xl"
             initial={{ scale: 0.7, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.7, opacity: 0 }}
           >
-            <h2 className="text-xl font-bold mb-4">
-              Share "{selectedCard?.name || "App"}"
-            </h2>
+            <h2 className="text-3xl font-bold mb-4 ">Share App</h2>
             <div className="text-gray-700 text-sm space-y-4">
-              <div>
-                <p className="font-semibold">People with access</p>
+              <div className="flex items-center border border-gray-300 rounded-xl overflow-hidden bg-gray-50">
+                <input
+                  type="text"
+                  value={shareToken}
+                  readOnly
+                  className="flex-grow px-4 py-2 text-gray-700 bg-transparent focus:outline-none"
+                />
+                <button
+                  onClick={handleCopy}
+                  className="flex items-center justify-center px-3 py-2 bg-gray-800 text-white hover:bg-gray-700 transition"
+                >
+                  {copied ? (
+                    <CheckCircleIcon className="w-5 h-5 text-green-400" />
+                  ) : (
+                    <ClipboardIcon className="w-5 h-5" />
+                  )}
+                </button>
               </div>
               <div>
-                <p className="font-semibold">General access</p>
-                <p>Only people with access can open with the link</p>
+                <p className="font-semibold">
+                  Share this token to share your application monitoring.
+                </p>
+                <small className="font-semibold text-gray-800">
+                  will expire in 24 hours
+                </small>
               </div>
             </div>
             <button

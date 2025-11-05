@@ -159,6 +159,7 @@ const Dashboard = () => {
         const token = localStorage.getItem("token");
         const savedShareToken = localStorage.getItem("shareToken");
         const savedTimestamp = localStorage.getItem("shareTokenTimestamp");
+        const savedAppId = localStorage.getItem("appId");
 
         const now = Date.now();
         const expiryTime = 24 * 60 * 60 * 1000; // 24 hours in ms
@@ -174,7 +175,7 @@ const Dashboard = () => {
         }
 
         // ✅ Otherwise, fetch a new one
-        if (sharePopup && shareToken === "") {
+        if (sharePopup && shareToken === "" && savedAppId !== id) {
           const response = await API.post(
             "/web/sharelink/create",
             { app_id: id },
@@ -185,9 +186,11 @@ const Dashboard = () => {
             }
           );
 
+          const app_id = id;
           const newToken = response.data.share_token;
 
           // Save new token and timestamp
+          localStorage.setItem("appId", app_id);
           localStorage.setItem("shareToken", newToken);
           localStorage.setItem("shareTokenTimestamp", now.toString());
 

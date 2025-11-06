@@ -27,7 +27,6 @@ ChartJS.register(
   Legend
 );
 
-
 const Dashboard = () => {
   const [metric, setMetric] = useState("cpu");
   const [history, setHistory] = useState({});
@@ -39,10 +38,10 @@ const Dashboard = () => {
   const { id } = useParams();
   const { type } = useParams();
 
-// websocket connection
+  // websocket connection
   useEffect(() => {
     const apiUrl = import.meta.env.VITE_BACKEND_URL;
-    
+
     const ws = new io(`${apiUrl}`, { path: "/ws" });
 
     ws.on("connect", () => {
@@ -119,16 +118,11 @@ const Dashboard = () => {
       try {
         const token = localStorage.getItem("token");
 
-        const app_containers = await API.get(
-          `/web/app/containers/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        console.log(app_containers.data);
+        const app_containers = await API.get(`/web/app/containers/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         setContainers(app_containers.data.app_containers);
         // const formatted = app_containers.data.app_containers.map((container, index) => ({
@@ -156,44 +150,33 @@ const Dashboard = () => {
     const fetchShareToken = async () => {
       try {
         const token = localStorage.getItem("token");
-        const savedShareToken = localStorage.getItem("shareToken");
-        const savedTimestamp = localStorage.getItem("shareTokenTimestamp");
-        const savedAppId = localStorage.getItem("appId");
+        const sharedTokens =
+          JSON.parse(localStorage.getItem("sharedTokens")) || {};
+        const exist = sharedTokens[id];
 
-        const now = Date.now();
-        const expiryTime = 24 * 60 * 60 * 1000; // 24 hours in ms
-
-        // ✅ If token exists and not expired, reuse it
         if (
-          savedShareToken &&
-          savedTimestamp &&
-          now - savedTimestamp < expiryTime
+          exist &&
+          Date.now() - new Date(exist.created_at).getTime() <
+            24 * 60 * 60 * 1000
         ) {
-          setShareToken(savedShareToken);
-          return;
-        }
-
-        // ✅ Otherwise, fetch a new one
-        if (sharePopup && shareToken === "" && savedAppId !== id) {
+          setShareToken(exist.token);
+        } else {
           const response = await API.post(
             "/web/sharelink/create",
             { app_id: id },
             {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
+              headers: { Authorization: `Bearer ${token}` },
             }
           );
 
-          const app_id = id;
-          const newToken = response.data.share_token;
+          sharedTokens[id] = {
+            token: response.data.share_token,
+            created_at: new Date().toISOString(),
+          };
 
-          // Save new token and timestamp
-          localStorage.setItem("appId", app_id);
-          localStorage.setItem("shareToken", newToken);
-          localStorage.setItem("shareTokenTimestamp", now.toString());
+          localStorage.setItem("sharedTokens", JSON.stringify(sharedTokens));
 
-          setShareToken(newToken);
+          setShareToken(response.data.share_token);
         }
       } catch (error) {
         console.error("Error fetching share token:", error);
@@ -217,16 +200,21 @@ const Dashboard = () => {
       <div className="bg-white shadow-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex justify-between items-center py-6 px-0">
           <h1 className="text-3xl flex justify-center items-center font-extrabold text-blue-800">
-            <img className="w-40 mr-10" src="/src/assets/logo-black.png" alt="" /> Dashboard
+            <img
+              className="w-40 mr-10"
+              src="/src/assets/logo-black.png"
+              alt=""
+            />{" "}
+            Dashboard
           </h1>
-          {type === "owned" ?  
-          <button
-            onClick={() => setSharePopup(true)}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition shadow"
-          >
-            Share App
-          </button>
-          : null }
+          {type === "owned" ? (
+            <button
+              onClick={() => setSharePopup(true)}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition shadow"
+            >
+              Share App
+            </button>
+          ) : null}
         </div>
         <div className="border-b border-gray-200"></div>
       </div>

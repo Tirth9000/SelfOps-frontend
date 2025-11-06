@@ -132,7 +132,6 @@ const HomeDashboard = () => {
           },
         }
       )
-      console.log(response);
     }
     setShowPopup(false);
     window.location.reload();

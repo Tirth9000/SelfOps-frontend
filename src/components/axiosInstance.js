@@ -1,7 +1,9 @@
 import axios from "axios";
 
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
+
 const API = axios.create({
-  baseURL: "http://localhost:8000",
+  baseURL: `${apiUrl}`,
 });
 
 // Add the access token to every request

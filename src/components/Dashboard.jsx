@@ -41,16 +41,15 @@ const Dashboard = () => {
 
 // websocket connection
   useEffect(() => {
-    const ws = new io("http://localhost:8000", { path: "/ws" });
+    const apiUrl = import.meta.env.VITE_BACKEND_URL;
+    
+    const ws = new io(`${apiUrl}`, { path: "/ws" });
 
     ws.on("connect", () => {
       ws.emit("join", { room: "web-" + id });
-      console.log(id);
-      console.log("WebSocket connected");
     });
 
     ws.on("live_message", (data) => {
-      console.log(data);
       setHistory((prev) => {
         const updated = { ...prev };
         data.forEach((container) => {

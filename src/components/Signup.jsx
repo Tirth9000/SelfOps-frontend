@@ -12,7 +12,7 @@ const Signup = () => {
 
   const handleSubmit = async(e) => {
     e.preventDefault();
-    const apiUrl = import.meta.env.BACKEND_URL;
+    const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
     if (username && email && password && confirmPassword) {
         if (password !== confirmPassword) {

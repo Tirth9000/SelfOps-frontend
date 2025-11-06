@@ -216,9 +216,9 @@ const Dashboard = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Fake Navbar like Applications page */}
       <div className="bg-white shadow-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto flex justify-between items-center py-6 px-6">
-          <h1 className="text-2xl font-extrabold text-gray-800">
-            📊 SelfOps - Container Dashboard
+        <div className="max-w-7xl mx-auto flex justify-between items-center py-6 px-0">
+          <h1 className="text-3xl flex justify-center items-center font-extrabold text-blue-800">
+            <img className="w-40 mr-10" src="/src/assets/logo-black.png" alt="" /> Dashboard
           </h1>
           {type === "owned" ?  
           <button

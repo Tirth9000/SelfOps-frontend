@@ -14,8 +14,8 @@ const Home = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Navbar */}
       <header className="bg-white shadow-md">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-800">SelfOps</h1>
+        <div className="max-w-7xl mx-auto py-4 flex justify-between items-center">
+          <img className="w-40" src="/src/assets/logo-black.png" alt="" />
           <nav className="space-x-4">
             <Link
               to="/login"

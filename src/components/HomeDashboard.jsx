@@ -14,33 +14,6 @@ import {
   BellIcon,
   Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
-// import {
-//   LineChart,
-//   Line,
-//   XAxis,
-//   YAxis,
-//   CartesianGrid,
-//   Tooltip as ChartTooltip,
-//   ResponsiveContainer,
-//   AreaChart,
-//   Area,
-// } from "recharts";
-
-// const cpuData = [
-//   { time: "10 AM", usage: 45 },
-//   { time: "11 AM", usage: 55 },
-//   { time: "12 PM", usage: 70 },
-//   { time: "1 PM", usage: 65 },
-//   { time: "2 PM", usage: 60 },
-// ];
-
-// const memoryData = [
-//   { time: "10 AM", usage: 30 },
-//   { time: "11 AM", usage: 40 },
-//   { time: "12 PM", usage: 50 },
-//   { time: "1 PM", usage: 48 },
-//   { time: "2 PM", usage: 55 },
-// ];
 
 const HomeDashboard = () => {
   const [activePage, setActivePage] = useState("Home");
@@ -169,7 +142,7 @@ const HomeDashboard = () => {
     <div className="flex flex-col min-h-screen bg-gray-50">
       {/* Navbar */}
       <header className="bg-white shadow-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-0 py-4 flex justify-between items-center">
           <h1
             className="text-2xl font-extrabold text-gray-800 cursor-pointer flex items-center gap-2 hover:text-indigo-600 transition duration-300"
             onClick={() => {
@@ -177,8 +150,9 @@ const HomeDashboard = () => {
               window.location.href = "/homedashboard";
             }}
           >
-            <span className="text-indigo-600 animate-pulse">📊</span>
-            <span>SelfOps</span>
+            <span className="flex items-center">
+              <img className="w-40" src="/src/assets/logo-black.png" alt="" />
+            </span>
           </h1>
 
           <div className="flex items-center gap-6">

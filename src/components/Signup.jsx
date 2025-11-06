@@ -62,7 +62,14 @@ const Signup = () => {
         <div className="absolute w-36 h-36 bg-white/10 rounded-full bottom-20 right-10 animate-pulse"></div>
         <div className="absolute w-24 h-24 bg-white/10 rounded-full top-1/4 right-1/4 animate-bounce"></div>
 
-        <div className="text-center text-white z-10 px-6">
+        <div className="text-center justify-center place-items-center text-white z-10 px-6">
+          <div className="items-center justify-center mx-auto mb-6">
+            <img
+              className="items-center justify-center w-40"
+              src="/src/assets/owl-white.png"
+              alt=""
+            />
+          </div>
           <h1 className="text-4xl font-bold mb-2">Welcome to SelfOps</h1>
           <p className="text-lg text-gray-200">
             Manage your apps & containers easily

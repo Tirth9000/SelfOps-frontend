@@ -12,16 +12,7 @@ const Signup = () => {
 
   const handleSubmit = async(e) => {
     e.preventDefault();
-
-    // if (!username || !email || !password || !confirmPassword) {
-    //   alert("Please fill all fields");
-    //   return;
-    // }
-
-    // if (password !== confirmPassword) {
-    //   alert("Passwords do not match!");
-    //   return;
-    // }
+    const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
     if (username && email && password && confirmPassword) {
         if (password !== confirmPassword) {
@@ -29,7 +20,7 @@ const Signup = () => {
           return;
         }
         try {
-          const response = await axios.post("http://localhost:8000/web/register", {
+          const response = await axios.post(`${apiUrl}/web/register`, {
             username: username,
             email: email,
             password: password,

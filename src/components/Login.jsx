@@ -11,24 +11,17 @@ const Login = () => {
   const handleSubmit = async(e) => {
     e.preventDefault();
 
-    // if (email && password) {
-    //   // Store a dummy token to simulate login
-    //   localStorage.setItem("token", "selfops_dummy_token");
-
-    //   // Redirect to HomeDashboard
-    //   navigate("/dashboard");
-    // } else {
-    //   alert("Please enter email and password");
-    // }
+    const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
     if (email && password) {
         try {
-          console.log("Submitting login for:", email);
-          const response = await axios.post("http://localhost:8000/web/login", {
-            email: email,  // Adjust if backend uses 'email' instead of 'username'
-            password: password,
-          });
-          console.log(response);
+          const response = await axios.post(
+            `${apiUrl}/web/login`,
+            {
+              email: email, // Adjust if backend uses 'email' instead of 'username'
+              password: password,
+            }
+          );
 
           if (response.status === 200) {
             localStorage.setItem("token", response.data.access_token);

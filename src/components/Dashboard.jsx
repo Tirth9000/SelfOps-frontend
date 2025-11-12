@@ -45,10 +45,12 @@ const Dashboard = () => {
     const ws = new io(`${apiUrl}`, { path: "/ws" });
 
     ws.on("connect", () => {
+      console.log("WebSocket connected");
       ws.emit("join", { room: "web-" + id });
     });
 
     ws.on("live_message", (data) => {
+      console.log("Received data:", data);
       setHistory((prev) => {
         const updated = { ...prev };
         data.forEach((container) => {

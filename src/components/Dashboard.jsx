@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { ClipboardIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 import { io } from "socket.io-client";
-import API from "../components/axiosInstance.js";
+import API from "./axiosInstance.js";
 import {
   Chart as ChartJS,
   CategoryScale,

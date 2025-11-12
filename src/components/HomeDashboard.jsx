@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { X, Share2, Crown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import API from "../components/axiosInstance.js";
+import API from "./axiosInstance.js";
 import {
   CpuChipIcon,
   CloudIcon,
@@ -119,19 +119,20 @@ const HomeDashboard = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [roomCode, setRoomCode] = useState("");
 
-  const handleJoin = async(e) => {
+  const handleJoin = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
 
     if (roomCode.trim() !== "") {
-      const response = await API.post("/web/sharelink/join",
+      const response = await API.post(
+        "/web/sharelink/join",
         { share_token: roomCode },
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
-      )
+      );
     }
     setShowPopup(false);
     window.location.reload();
